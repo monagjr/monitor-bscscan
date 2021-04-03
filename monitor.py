@@ -54,7 +54,7 @@ while True:
                     response = requests.get(topItemUrl)
                     content = response.content.decode('utf-8')
                     res = BeautifulSoup(content, 'html.parser')
-                    last_transcation_action_url = res.findAll('a', attrs={'class': 'd-inine-block'})[-1]
+                    last_transcation_action_url = res.findAll('a', attrs={'class': 'd-inline-block'})[-1]
                     token = last_transcation_action_url.split('/')[-1]
                     # copy token to clipboard
                     subprocess.run(['clip.exe'], input=token.encode('utf-16'), check=True)
