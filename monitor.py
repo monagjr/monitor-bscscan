@@ -39,7 +39,11 @@ while True:
         content = response.content.decode('utf-8')
 
         res = BeautifulSoup(content, 'html.parser')
-        topItemUrl = res.findAll('a', attrs={'class': 'hash-tag'})[0]
+        listUrls = res.findAll('a', attrs={'class': 'hash-tag'})
+        if not len(listUrls):
+            print(content)
+            sys.exit('ERROR!')
+        topItemUrl = listUrls[0]
         # check if it is failed transaction
         isFailed = True if topItemUrl.previous_sibling else False
         topItemUrl = topItemUrl['href']
