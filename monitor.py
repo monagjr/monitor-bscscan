@@ -59,7 +59,8 @@ while True:
                     # copy token to clipboard
                     subprocess.run(['clip.exe'], input=token.encode('utf-16'), check=True)
                     print ('Token %s copied to Clipboard' % token)
-                print ('Failed Transaction')
+                else:
+                    print ('Failed Transaction')
                 # play alert sound
                 playsound('alert.mp3')
             else:
