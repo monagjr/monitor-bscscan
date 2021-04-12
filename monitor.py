@@ -1,5 +1,5 @@
 import subprocess
-from playsound import playsound
+from playsound import playsound, PlaysoundException
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
@@ -22,6 +22,11 @@ with open('urls.txt', 'r') as f:
 if not input_urls:
     sys.exit('urls.txt is empty')
 
+input_proxies = []
+if path.exists('proxies.txt'):
+    with open('proxies.txt', 'r') as f:
+        input_proxies = [u.strip() for u in f.readlines()]
+
 monitored_urls = {}
 
 # load monitored urls state
@@ -29,20 +34,31 @@ if path.exists('state.data'):
     with open('state.data', 'rb') as f:
             monitored_urls = pickle.load(f)
 
+proxies = None
+input_proxies_index = -1
 while True:
     for url in input_urls:
         now = datetime.now()
         print('%s Checking %s ...' % (now.strftime("%d/%m/%Y %H:%M:%S"),url))
         
         token = ''
-        response = requests.get(url)
+        response = requests.get(url, proxies=proxies)
         content = response.content.decode('utf-8')
 
         res = BeautifulSoup(content, 'html.parser')
         listUrls = res.findAll('a', attrs={'class': 'hash-tag'})
         if not len(listUrls):
             print(content)
-            sys.exit('ERROR!')
+            if len(input_proxies):
+                input_proxies_index = 0 if input_proxies_index > len(input_proxies) else input_proxies_index+1
+                proxyIP = input_proxies[input_proxies_index]
+            
+                proxies = {
+                  'http': proxyIP ,
+                  'https': proxyIP,
+                }
+                print('Switch to Proxy ', proxyIP)
+            continue
         topItemUrl = listUrls[0]
         # check if it is failed transaction
         isFailed = True if topItemUrl.previous_sibling else False
@@ -55,7 +71,7 @@ while True:
                 print ('Change Detected!')
                 # follow if not failed transaction only
                 if not isFailed:
-                    response = requests.get(topItemUrl)
+                    response = requests.get(topItemUrl, proxies=proxies)
                     content = response.content.decode('utf-8')
                     res = BeautifulSoup(content, 'html.parser')
                     last_transcation_action_url = res.findAll('a', attrs={'class': 'd-inline-block'})[-1]['href']
@@ -66,7 +82,10 @@ while True:
                 else:
                     print ('Failed Transaction')
                 # play alert sound
-                playsound('alert.mp3')
+                try:
+                    playsound('alert.mp3')
+                except PlaysoundException:
+                    print('Can not play sound! Check your soundcard')
             else:
                 print ('New Url. First Check!')
             monitored_urls[monitored_url_key] = topItemUrl
