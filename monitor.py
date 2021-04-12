@@ -10,6 +10,23 @@ import sys
 import time
 from datetime import datetime
 
+def getContent(url, proxies={}):
+    content = ''
+    try:
+        response = requests.get(url, proxies=proxies)
+        content = response.content.decode('utf-8')
+    except KeyboardInterrupt:
+        sys.exit('Exit!')
+    except:
+        e = str(sys.exc_info()[0])
+        e = e.replace('<class \'', '')
+        e = e.replace('\'>', '')
+        e = e.replace('requests.exceptions.', '')
+        print('Unexpected error: ', e)
+        pass
+    return content
+
+
 # load input urls to monitor
 if not path.exists('urls.txt'):
     sys.exit('urls.txt file can not be found')
@@ -41,16 +58,15 @@ while True:
         now = datetime.now()
         print('%s Checking %s ...' % (now.strftime("%d/%m/%Y %H:%M:%S"),url))
         
-        token = ''
-        response = requests.get(url, proxies=proxies)
-        content = response.content.decode('utf-8')
+        token = '' 
+        content = getContent(url, proxies)
 
         res = BeautifulSoup(content, 'html.parser')
         listUrls = res.findAll('a', attrs={'class': 'hash-tag'})
         if not len(listUrls):
             # print(content)
             if len(input_proxies):
-                input_proxies_index = 0 if input_proxies_index > len(input_proxies) else input_proxies_index+1
+                input_proxies_index = 0 if input_proxies_index >= (len(input_proxies)-1) else input_proxies_index+1
                 proxyIP = input_proxies[input_proxies_index]
             
                 proxies = {
@@ -70,9 +86,8 @@ while True:
             if monitored_url_key in monitored_urls:
                 print ('Change Detected!')
                 # follow if not failed transaction only
-                if not isFailed:
-                    response = requests.get(topItemUrl, proxies=proxies)
-                    content = response.content.decode('utf-8')
+                if not isFailed: 
+                    content = getContent(topItemUrl, proxies)
                     res = BeautifulSoup(content, 'html.parser')
                     last_transcation_action_url = res.findAll('a', attrs={'class': 'd-inline-block'})[-1]['href']
                     token = last_transcation_action_url.split('/')[-1]
@@ -94,6 +109,4 @@ while True:
         else:
             print ('No Change!')
         time.sleep(1/(len(input_urls)+1))
-   
-
 
