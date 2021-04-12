@@ -48,7 +48,7 @@ while True:
         res = BeautifulSoup(content, 'html.parser')
         listUrls = res.findAll('a', attrs={'class': 'hash-tag'})
         if not len(listUrls):
-            print(content)
+            # print(content)
             if len(input_proxies):
                 input_proxies_index = 0 if input_proxies_index > len(input_proxies) else input_proxies_index+1
                 proxyIP = input_proxies[input_proxies_index]
